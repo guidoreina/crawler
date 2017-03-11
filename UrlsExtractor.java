@@ -10,7 +10,7 @@ import java.net.URI;
 import java.net.URL;
 import javax.swing.text.html.parser.ParserDelegator;
 
-class UrlsExtractor {
+public class UrlsExtractor {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
   ////                                                                      ////
@@ -31,6 +31,7 @@ class UrlsExtractor {
   //////////////////////////////////////////////////////////////////////////////
 
   private Database database = null;
+  private UrlFilter urlFilter = null;
 
   private Log log = null;
 
@@ -47,12 +48,14 @@ class UrlsExtractor {
   // Description: sets the data members.
   // Parameters:
   //   - database: database object.
+  //   - urlFilter: URL filter object.
   //   - log: logger object.
   //
   // Returns: nothing.
-  public UrlsExtractor(Database database, Log log)
+  public UrlsExtractor(Database database, UrlFilter urlFilter, Log log)
   {
     this.database = database;
+    this.urlFilter = urlFilter;
     this.log = log;
   }
 
@@ -79,7 +82,7 @@ class UrlsExtractor {
   private boolean processBody(Reader reader, URL url)
   {
     try {
-      HtmlParser htmlParser = new HtmlParser(database, url, log);
+      HtmlParser htmlParser = new HtmlParser(database, urlFilter, url, log);
       ParserDelegator parserDelegator = new ParserDelegator();
 
       parserDelegator.parse(reader, htmlParser, true);

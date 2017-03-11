@@ -37,11 +37,14 @@ public class Crawler {
   private Log log = null;
   private Database database = null;
   private Downloader downloader = null;
+  private UrlFilter urlFilter = null;
   private UrlsExtractor urlsExtractor = null;
 
   private String tempDir = null;
   private String finalDir = null;
   private String httpUserAgent = null;
+  private String excludeFilename = null;
+  private String includeFilename = null;
   private String logFilename = null;
   private Level logLevel = null;
 
@@ -62,6 +65,8 @@ public class Crawler {
   //   - tempDir: temporary directory where to download the files.
   //   - finalDir: final directory where to save the downloaded files.
   //   - httpUserAgent: user agent to be used in the HTTP requests.
+  //   - excludeFilename: name of the file containing the URLs to be excluded.
+  //   - includeFilename: name of the file containing the URLs to be included.
   //   - logFilename: name of the log file.
   //   - logLevel: log level to be used for logging.
   //
@@ -69,6 +74,8 @@ public class Crawler {
   private Crawler(String tempDir,
                   String finalDir,
                   String httpUserAgent,
+                  String excludeFilename,
+                  String includeFilename,
                   String logFilename,
                   Level logLevel)
   {
@@ -77,6 +84,8 @@ public class Crawler {
     this.tempDir = tempDir;
     this.finalDir = finalDir;
     this.httpUserAgent = httpUserAgent;
+    this.excludeFilename = excludeFilename;
+    this.includeFilename = includeFilename;
     this.logFilename = logFilename;
     this.logLevel = logLevel;
   }
@@ -87,6 +96,8 @@ public class Crawler {
   //                - Creates and initializes the logger object.
   //                - Creates and initializes the database object.
   //                - Creates and initializes the downloader object.
+  //                - Creates and initializes the URL filter object.
+  //                - Loads the URLs to be excluded and to be included.
   //                - Creates and initializes the URLs extractor object.
   //
   // Parameters:
@@ -122,12 +133,22 @@ public class Crawler {
 
         // Initialize downloader.
         if (downloader.initialize()) {
-          // Create URLs extractor object.
-          urlsExtractor = new UrlsExtractor(database, log);
+          // Create URL filter object.
+          urlFilter = new UrlFilter(log);
 
-          // Initialize URLs extractor.
-          if (urlsExtractor.initialize()) {
-            return true;
+          // Initialize URL filter object and load URLs.
+          if ((urlFilter.initialize()) &&
+              (urlFilter.load(excludeFilename, includeFilename))) {
+            // Create URLs extractor object.
+            urlsExtractor = new UrlsExtractor(database, urlFilter, log);
+
+            // Initialize URLs extractor.
+            if (urlsExtractor.initialize()) {
+              return true;
+            } else {
+              // Shutdown database.
+              database.shutdown();
+            }
           } else {
             // Shutdown database.
             database.shutdown();
@@ -218,6 +239,9 @@ public class Crawler {
                        DEFAULT_HTTP_USER_AGENT +
                        ").");
 
+    System.out.println("\t--exclude-urls <filename>");
+    System.out.println("\t--include-urls <filename>");
+
     System.out.println("\t--log-filename <log-filename> (default: " +
                        DEFAULT_LOG_FILENAME +
                        ").");
@@ -244,6 +268,8 @@ public class Crawler {
     String tempDir = DEFAULT_TEMP_DIRECTORY;
     String finalDir = DEFAULT_FINAL_DIRECTORY;
     String httpUserAgent = DEFAULT_HTTP_USER_AGENT;
+    String excludeFilename = null;
+    String includeFilename = null;
     String logFilename = DEFAULT_LOG_FILENAME;
     Level logLevel = DEFAULT_LOG_LEVEL;
 
@@ -320,6 +346,26 @@ public class Crawler {
         httpUserAgent = args[i + 1];
 
         i += 2;
+      } else if (args[i].equals("--exclude-urls")) {
+        // Last argument?
+        if (i + 1 == args.length) {
+          help();
+          return;
+        }
+
+        excludeFilename = args[i + 1];
+
+        i += 2;
+      } else if (args[i].equals("--include-urls")) {
+        // Last argument?
+        if (i + 1 == args.length) {
+          help();
+          return;
+        }
+
+        includeFilename = args[i + 1];
+
+        i += 2;
       } else if (args[i].equals("--log-filename")) {
         // Last argument?
         if (i + 1 == args.length) {
@@ -367,6 +413,8 @@ public class Crawler {
     Crawler crawler = new Crawler(tempDir,
                                   finalDir,
                                   httpUserAgent,
+                                  excludeFilename,
+                                  includeFilename,
                                   logFilename,
                                   logLevel);
 

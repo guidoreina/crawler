@@ -49,6 +49,8 @@ Options:
   --temp-dir <directory> (default: tmpdata).
   --final-dir <directory> (default: data).
   --user-agent <user-agent> (default: Mozilla/5.0 (X11; Linux x86_64; rv:38.0) Gecko/20100101 Firefox/38.0 Iceweasel/38.7.1).
+  --exclude-urls <filename>
+  --include-urls <filename>
   --log-filename <log-filename> (default: crawler.log).
   --log-level <log-level> (default: FINEST).
 ```

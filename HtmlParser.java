@@ -15,6 +15,7 @@ public class HtmlParser extends HTMLEditorKit.ParserCallback {
   //////////////////////////////////////////////////////////////////////////////
 
   private Database database = null;
+  private UrlFilter urlFilter = null;
 
   private URL contextUrl = null;
 
@@ -33,13 +34,18 @@ public class HtmlParser extends HTMLEditorKit.ParserCallback {
   // Description: sets the data members.
   // Parameters:
   //   - database: database object.
-  //   - contextUrl: context URL.
+  //   - urlFilter: URL filter object.
+  //   - contextUrl: context URL object.
   //   - log: logger object.
   //
   // Returns: nothing.
-  public HtmlParser(Database database, URL contextUrl, Log log)
+  public HtmlParser(Database database,
+                    UrlFilter urlFilter,
+                    URL contextUrl,
+                    Log log)
   {
     this.database = database;
+    this.urlFilter = urlFilter;
     this.contextUrl = contextUrl;
     this.log = log;
   }
@@ -98,23 +104,28 @@ public class HtmlParser extends HTMLEditorKit.ParserCallback {
 
   // Method: addUrl
   // Description: adds the URL to the table of URLs to be visited only if the
-  //              URL starts with "http://" or "https://".
+  //              URL starts with "http://" or "https://" and matches the URL
+  //              filter.
   //
   // Parameters:
   //   - urlStr: URL to be added.
   //
   // Returns: true:
-  //            - The scheme is "HTTP" or "HTTPS", the URL is valid and could
-  //              be added to the database (if not already done);
+  //            - The scheme is "HTTP" or "HTTPS", the URL matches the URL
+  //              filter, the URL is valid and could be added to the database
+  //              (if not already done);
   //              or:
   //            - The URL has another scheme.
+  //              or:
+  //            - The URL doesn't match the URL filter.
   //          false: otherwise.
   private boolean addUrl(String urlStr)
   {
-    // HTTP or HTTPS?
+    // HTTP or HTTPS and matches the URL filter?
     if ((urlStr != null) &&
         ((urlStr.regionMatches(true, 0, "http://", 0, 7)) ||
-         (urlStr.regionMatches(true, 0, "https://", 0, 8)))) {
+         (urlStr.regionMatches(true, 0, "https://", 0, 8))) &&
+        (urlFilter.matches(urlStr))) {
       try {
         URL url = new URL(contextUrl, urlStr);
 
