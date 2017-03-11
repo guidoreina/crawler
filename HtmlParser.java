@@ -97,22 +97,35 @@ public class HtmlParser extends HTMLEditorKit.ParserCallback {
 
 
   // Method: addUrl
-  // Description: adds the URL to the table of URLs to be visited.
+  // Description: adds the URL to the table of URLs to be visited only if the
+  //              URL starts with "http://" or "https://".
+  //
   // Parameters:
   //   - urlStr: URL to be added.
   //
-  // Returns: true: the URL is valid and could be added to the database
-  //                (if not already done); false: otherwise.
+  // Returns: true:
+  //            - The scheme is "HTTP" or "HTTPS", the URL is valid and could
+  //              be added to the database (if not already done);
+  //              or:
+  //            - The URL has another scheme.
+  //          false: otherwise.
   private boolean addUrl(String urlStr)
   {
-    try {
-      URL url = new URL(contextUrl, urlStr);
+    // HTTP or HTTPS?
+    if ((urlStr != null) &&
+        ((urlStr.regionMatches(true, 0, "http://", 0, 7)) ||
+         (urlStr.regionMatches(true, 0, "https://", 0, 8)))) {
+      try {
+        URL url = new URL(contextUrl, urlStr);
 
-      return database.addUrlToVisit(url);
-    } catch (IOException e) {
-      log.log(Level.WARNING, "Exception: '" + e.toString() + "'.");
+        return database.addUrlToVisit(url);
+      } catch (IOException e) {
+        log.log(Level.WARNING, "Exception: '" + e.toString() + "'.");
+      }
+
+      return false;
     }
 
-    return false;
+    return true;
   }
 }
