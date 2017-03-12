@@ -43,9 +43,9 @@ public class UrlFilter {
   // Returns: true: the URL matchers could be initialized; false: otherwise.
   public boolean initialize()
   {
-    exclude = new UrlMatcher(log);
+    exclude = new UrlMatcher("exclude", log);
     if (exclude.initialize()) {
-      include = new UrlMatcher(log);
+      include = new UrlMatcher("include", log);
 
       if (include.initialize()) {
         return true;

@@ -30,6 +30,8 @@ public class UrlMatcher {
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
+  private String name = null;
+
   private ArrayList<Pattern> patterns = null;
 
   private Log log = null;
@@ -46,11 +48,13 @@ public class UrlMatcher {
   // Method: Constructor
   // Description: sets the data member "log".
   // Parameters:
+  //   - name: name of the URL matcher (either "exclude" or "include").
   //   - log: logger object.
   //
   // Returns: nothing.
-  public UrlMatcher(Log log)
+  public UrlMatcher(String name, Log log)
   {
+    this.name = name;
     this.log = log;
   }
 
@@ -75,7 +79,8 @@ public class UrlMatcher {
   // Returns: true: the file could be processed; false: otherwise.
   public boolean load(String filename)
   {
-    log.log(Level.INFO, "Loading patterns file '" + filename + "'...");
+    log.log(Level.INFO,
+            "[" + name + "] Loading patterns file '" + filename + "'...");
 
     try (BufferedReader reader = Files.newBufferedReader(Paths.get(filename),
                                                          DEFAULT_CHARSET)) {
@@ -92,10 +97,15 @@ public class UrlMatcher {
               // Add pattern to the list of patterns.
               patterns.add(p);
 
-              log.log(Level.FINEST, "Added pattern '" + patternStr + "'.");
+              log.log(Level.FINEST,
+                      "[" + name + "] Added pattern '" + patternStr + "'.");
             } catch (PatternSyntaxException e) {
               log.log(Level.WARNING,
-                      "Ignored invalid pattern '" + patternStr + "'.");
+                      "[" +
+                      name +
+                      "] Ignored invalid pattern '" +
+                      patternStr +
+                      "'.");
             }
           }
         }
@@ -105,10 +115,12 @@ public class UrlMatcher {
 
       return true;
     } catch (IOException e) {
-      log.log(Level.SEVERE, "Exception: '" + e.toString() + "'.");
+      log.log(Level.SEVERE,
+              "[" + name + "] Exception: '" + e.toString() + "'.");
     }
 
-    log.log(Level.SEVERE, "Error processing file '" + filename + "'.");
+    log.log(Level.SEVERE,
+            "[" + name + "] Error processing file '" + filename + "'.");
 
     return false;
   }
@@ -127,7 +139,9 @@ public class UrlMatcher {
         Matcher m = p.matcher(urlStr);
         if (m.matches()) {
           log.log(Level.FINEST,
-                  "URL '" +
+                  "[" +
+                  name +
+                  "] URL '" +
                   urlStr +
                   "' matches pattern '" +
                   p.toString() +
@@ -137,9 +151,11 @@ public class UrlMatcher {
         }
       }
 
-      log.log(Level.FINEST, "No pattern matches URL '" + urlStr + "'.");
+      log.log(Level.FINEST,
+              "[" + name + "] No pattern matches URL '" + urlStr + "'.");
     } else {
-      log.log(Level.FINEST, "No patterns to match URL '" + urlStr + "'.");
+      log.log(Level.FINEST,
+              "[" + name + "] No patterns to match URL '" + urlStr + "'.");
     }
 
     return false;
